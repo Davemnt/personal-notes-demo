@@ -80,22 +80,9 @@
         <div id="result"></div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
-        import { getFirestore, doc, getDoc, setDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js';
-
-        // Configuración de Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyBxLPJYOIPMqKByPqyKSMkJpoZJgEtfLvA",
-            authDomain: "temasdelevangelio-3cfa4.firebaseapp.com",
-            projectId: "temasdelevangelio-3cfa4",
-            storageBucket: "temasdelevangelio-3cfa4.firebasestorage.app",
-            messagingSenderId: "85666056968",
-            appId: "1:85666056968:web:f5a1a3a3de83f3f8e690c2"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+    <script>
+        // Nota: Este archivo requería Firebase para funcionar, pero se ha removido para el portfolio
+        // Las funcionalidades originales están disponibles en la versión con localStorage
 
         function showResult(message, isError = false) {
             const result = document.getElementById('result');
@@ -103,24 +90,14 @@
             result.className = isError ? 'error' : 'success';
         }
 
-        window.checkCurrentPin = async function() {
-            try {
-                const userRef = doc(db, "users", "mainUser");
-                const userSnap = await getDoc(userRef);
-                
-                if (userSnap.exists()) {
-                    const userData = userSnap.data();
-                    showResult(`✅ PIN actual: <strong>${userData.pin}</strong><br>
-                              📅 Última actualización: ${userData.updatedAt || 'No disponible'}`);
-                } else {
-                    showResult("❌ No se encontró el documento del usuario. Necesitas inicializar.", true);
-                }
-            } catch (error) {
-                showResult(`❌ Error: ${error.message}`, true);
-            }
+        window.checkCurrentPin = function() {
+            // Funcionalidad simplificada para demostración
+            const storedPin = localStorage.getItem('demoPin') || '1234';
+            showResult(`✅ PIN de demo: <strong>${storedPin}</strong><br>
+                      📅 Almacenado localmente`);
         };
 
-        window.setNewPin = async function() {
+        window.setNewPin = function() {
             const newPin = document.getElementById('newPin').value.trim();
             
             if (!newPin) {
@@ -133,33 +110,15 @@
                 return;
             }
 
-            try {
-                const userRef = doc(db, "users", "mainUser");
-                await updateDoc(userRef, {
-                    pin: newPin,
-                    updatedAt: new Date().toISOString()
-                });
-                
-                showResult(`✅ PIN actualizado a: <strong>${newPin}</strong>`);
-                document.getElementById('newPin').value = '';
-            } catch (error) {
-                showResult(`❌ Error actualizando PIN: ${error.message}`, true);
-            }
+            // Guardar en localStorage para demo
+            localStorage.setItem('demoPin', newPin);
+            showResult(`✅ PIN de demo actualizado a: <strong>${newPin}</strong>`);
+            document.getElementById('newPin').value = '';
         };
 
-        window.initUser = async function() {
-            try {
-                const userRef = doc(db, "users", "mainUser");
-                await setDoc(userRef, {
-                    pin: "1234",
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                });
-                
-                showResult("✅ Usuario inicializado con PIN 1234");
-            } catch (error) {
-                showResult(`❌ Error inicializando usuario: ${error.message}`, true);
-            }
+        window.initUser = function() {
+            localStorage.setItem('demoPin', '1234');
+            showResult("✅ Demo inicializado con PIN 1234");
         };
 
         // Auto-verificar al cargar

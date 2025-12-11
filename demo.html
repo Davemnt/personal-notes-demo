@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo - Sistema de Notas Privadas</title>
+  <meta name="description" content="Demostración del sistema de gestión de notas privadas con Firebase">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+      --bg-secondary: #ffffff;
+      --text-primary: #1a202c;
+      --text-muted: #718096;
+      --accent-color: #ed8936;
+      --border-color: #e2e8f0;
+      --shadow: rgba(0, 0, 0, 0.08);
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+      --bg-secondary: #2d3748;
+      --text-primary: #f7fafc;
+      --text-muted: #a0aec0;
+      --border-color: #4a5568;
+      --shadow: rgba(0, 0, 0, 0.3);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', system-ui;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER */
+    header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px var(--shadow);
+    }
+
+    .header-left h1 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .header-left .subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .header-right {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    button {
+      background: var(--accent-color);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: opacity 0.2s;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    button.secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    /* MAIN LAYOUT */
+    .layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* SIDEBAR */
+    aside {
+      width: 250px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      overflow-y: auto;
+      padding: 15px;
+    }
+
+    .category-list {
+      list-style: none;
+    }
+
+    .category-list li {
+      padding: 10px 12px;
+      margin: 5px 0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-size: 14px;
+    }
+
+    .category-list li:hover {
+      background: rgba(237, 137, 54, 0.1);
+    }
+
+    .category-list li.active {
+      background: var(--accent-color);
+      color: white;
+      font-weight: 600;
+    }
+
+    /* MAIN CONTENT */
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 30px;
+    }
+
+    .title-section {
+      margin-bottom: 30px;
+    }
+
+    .title-section h2 {
+      font-size: 28px;
+      margin-bottom: 5px;
+    }
+
+    .title-section p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* GRID DE NOTAS */
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 3px var(--shadow);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px var(--shadow);
+      border-color: var(--accent-color);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .card-header h3 {
+      font-size: 16px;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .card-date {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      margin-left: 10px;
+    }
+
+    .card-meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 12px;
+    }
+
+    .card-meta .category {
+      background: rgba(237, 137, 54, 0.1);
+      color: var(--accent-color);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .card-content {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 15px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .card-actions button {
+      flex: 1;
+      font-size: 12px;
+      padding: 6px 10px;
+    }
+
+    .card-actions button.secondary {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* DEMO BANNER */
+    .demo-banner {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px 20px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .demo-banner a {
+      color: white;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* EMPTY STATE */
+    .empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      aside {
+        display: none;
+      }
+
+      main {
+        padding: 15px;
+      }
+
+      .notes-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* THEME TOGGLE */
+    .theme-toggle {
+      font-size: 18px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+  <!-- DEMO BANNER -->
+  <div class="demo-banner">
+    🎨 DEMOSTRACIÓN - Este es un ejemplo de diseño. Datos ficticios. 
+    <a href="https://github.com/Davemnt/Blog-temasDelEvangelio" target="_blank">Ver proyecto completo</a>
+  </div>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-left">
+      <h1>📝 Sistema de Notas</h1>
+      <div class="subtitle">Gestión privada de contenido</div>
+    </div>
+    <div class="header-right">
+      <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema">
+        <span id="themeIcon">🌙</span>
+      </button>
+      <button class="secondary">+ Nueva Nota</button>
+    </div>
+  </header>
+
+  <!-- LAYOUT PRINCIPAL -->
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <aside>
+      <ul class="category-list">
+        <li class="active" onclick="filterCategory('all')">📋 Todas (6)</li>
+        <li onclick="filterCategory('teologia')">📖 Diario personal (2)</li>
+        <li onclick="filterCategory('historia')">🏛️ Anotaciones (2)</li>
+        <li onclick="filterCategory('practica')">✝️ Temas importantes (2)</li>
+      </ul>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main>
+      <div class="title-section">
+        <h2 id="pageTitle">📋 Todas las Notas</h2>
+        <p id="pageDesc">Notas guardadas en Firestore</p>
+      </div>
+
+      <div class="notes-grid" id="notesGrid">
+        <!-- Las notas se cargan aquí -->
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // DATOS DE DEMOSTRACIÓN
+    const demoNotes = [
+      {
+        id: 1,
+        title: "Introducción a la Teología",
+        category: "Teología",
+        date: "15 nov 2025",
+        content: "La teología es el estudio de Dios y su relación con el universo. En esta nota exploramos los fundamentos de la fe cristiana y cómo se relaciona con la vida cotidiana.",
+        preview: "La teología es el estudio de Dios y su relación con el universo. En esta nota exploramos los fundamentos..."
+      },
+      {
+        id: 2,
+        title: "Parábola del Sembrador",
+        category: "Historia Bíblica",
+        date: "14 nov 2025",
+        content: "Una de las parábolas más conocidas del Evangelio. Analiza cómo diferentes tipos de tierra representan diferentes respuestas a la palabra de Dios.",
+        preview: "Una de las parábolas más conocidas del Evangelio. Analiza cómo diferentes tipos de tierra..."
+      },
+      {
+        id: 3,
+        title: "Frutos del Espíritu Santo",
+        category: "Aplicación Práctica",
+        date: "13 nov 2025",
+        content: "Exploración de los nueve frutos del Espíritu: amor, alegría, paz, paciencia, amabilidad, bondad, fidelidad, mansedumbre y dominio propio.",
+        preview: "Exploración de los nueve frutos del Espíritu: amor, alegría, paz, paciencia, amabilidad..."
+      },
+      {
+        id: 4,
+        title: "La Vida de Moisés",
+        category: "Historia Bíblica",
+        date: "12 nov 2025",
+        content: "Desde su infancia en Egipto hasta la entrega de los Diez Mandamientos. Una historia de fe, liderazgo y redención.",
+        preview: "Desde su infancia en Egipto hasta la entrega de los Diez Mandamientos. Una historia de fe..."
+      },
+      {
+        id: 5,
+        title: "Soteriología: Doctrina de la Salvación",
+        category: "Teología",
+        date: "11 nov 2025",
+        content: "Estudio profundo de cómo la salvación funciona en la fe cristiana, incluyendo justificación, santificación y glorificación.",
+        preview: "Estudio profundo de cómo la salvación funciona en la fe cristiana, incluyendo justificación..."
+      },
+      {
+        id: 6,
+        title: "Vivir los Valores Cristianos",
+        category: "Aplicación Práctica",
+        date: "10 nov 2025",
+        content: "Guía práctica sobre cómo aplicar los valores cristianos en la familia, el trabajo y la comunidad diaria.",
+        preview: "Guía práctica sobre cómo aplicar los valores cristianos en la familia, el trabajo y la comunidad..."
+      }
+    ];
+
+    let currentFilter = 'all';
+
+    // RENDERIZAR NOTAS
+    function renderNotes(filter = 'all') {
+      const grid = document.getElementById('notesGrid');
+      let filtered = demoNotes;
+
+      if (filter !== 'all') {
+        filtered = demoNotes.filter(note => 
+          note.category.toLowerCase().replace(/\s+/g, '') === filter
+        );
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="empty">
+            <div class="empty-icon">📭</div>
+            <div>No hay notas en esta categoría</div>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(note => `
+        <div class="card">
+          <div class="card-header">
+            <h3>${note.title}</h3>
+            <div class="card-date">${note.date}</div>
+          </div>
+          <div class="card-meta">
+            <span class="category">${note.category}</span>
+          </div>
+          <div class="card-content">${note.preview}</div>
+          <div class="card-actions">
+            <button onclick="viewNote(${note.id})">👁️ Ver</button>
+            <button class="secondary" onclick="alert('Esta es una demostración. No se puede editar.')">✏️ Editar</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // FILTRAR POR CATEGORÍA
+    function filterCategory(cat) {
+      currentFilter = cat;
+      
+      // Actualizar UI de sidebar
+      document.querySelectorAll('.category-list li').forEach(li => {
+        li.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // Actualizar título
+      const titles = {
+        'all': { title: '📋 Todas las Notas', desc: 'Notas guardadas en Firestore' },
+        'teologia': { title: '📖 Teología', desc: '2 notas' },
+        'historia': { title: '🏛️ Historia Bíblica', desc: '2 notas' },
+        'practica': { title: '✝️ Aplicación Práctica', desc: '2 notas' }
+      };
+
+      const titleData = titles[cat] || titles['all'];
+      document.getElementById('pageTitle').textContent = titleData.title;
+      document.getElementById('pageDesc').textContent = titleData.desc;
+
+      renderNotes(cat);
+    }
+
+    // VER NOTA
+    function viewNote(id) {
+      const note = demoNotes.find(n => n.id === id);
+      alert(`📖 "${note.title}"\n\n${note.content}\n\nEsta es una demostración. En la app real, esto abriría en una nueva pestaña.`);
+    }
+
+    // CAMBIAR TEMA
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      document.getElementById('themeIcon').textContent = newTheme === 'light' ? '🌙' : '☀️';
+      localStorage.setItem('demo-theme', newTheme);
+    }
+
+    // CARGAR TEMA GUARDADO
+    window.addEventListener('load', () => {
+      const savedTheme = localStorage.getItem('demo-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.getElementById('themeIcon').textContent = savedTheme === 'light' ? '🌙' : '☀️';
+      renderNotes();
+    });
+  </script>
+</body>
+</html>

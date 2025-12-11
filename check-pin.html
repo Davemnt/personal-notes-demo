@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificar PIN</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin: 0;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      max-width: 500px;
+      width: 90%;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .pin-display {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 8px;
+      font-size: 24px;
+      font-weight: bold;
+      font-family: monospace;
+      margin: 20px 0;
+      border: 2px solid #ddd;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .status {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .loading {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+    .error {
+      background: #ffebee;
+      color: #d32f2f;
+    }
+    .success {
+      background: #e8f5e9;
+      color: #388e3c;
+    }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background: #5568d3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔑 Verificar PIN Actual</h1>
+    <div class="pin-display" id="pinDisplay">Cargando...</div>
+    <div class="status loading" id="status">Conectando a Firestore...</div>
+    <button onclick="checkPin()">🔄 Verificar de nuevo</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAv9YYGnQnbo3B7SS082SXopkaiyX4",
+      authDomain: "temasdelevangelio-3cfa4.firebaseapp.com",
+      projectId: "temasdelevangelio-3cfa4",
+      storageBucket: "temasdelevangelio-3cfa4.firebasestorage.app",
+      messagingSenderId: "385702280622",
+      appId: "1:385702280622:web:17b38bca657a29c4e2dc3f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.checkPin = async function() {
+      const pinDisplay = document.getElementById('pinDisplay');
+      const status = document.getElementById('status');
+      
+      pinDisplay.textContent = 'Cargando...';
+      status.textContent = 'Conectando a Firestore...';
+      status.className = 'status loading';
+
+      try {
+        const ref = doc(db, "users", "mainUser");
+        const snap = await getDoc(ref);
+
+        if (!snap.exists()) {
+          pinDisplay.textContent = 'NO ENCONTRADO';
+          status.textContent = '❌ No se encontró el documento del usuario en Firestore';
+          status.className = 'status error';
+          return;
+        }
+
+        const data = snap.data();
+        const pin = data.pin || 'NO CONFIGURADO';
+        
+        pinDisplay.textContent = pin;
+        status.textContent = `✅ PIN actual: ${pin}`;
+        status.className = 'status success';
+        console.log('Datos del usuario:', data);
+      } catch (error) {
+        console.error('Error detallado:', error);
+        pinDisplay.textContent = 'ERROR';
+        status.textContent = `❌ Error: ${error.message || error}. Revisa la consola del navegador para más detalles.`;
+        status.className = 'status error';
+      }
+    };
+
+    // Verificar PIN al cargar
+    window.checkPin();
+  </script>
+</body>
+</html>

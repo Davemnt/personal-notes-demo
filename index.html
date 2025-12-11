@@ -1,0 +1,1762 @@
+<!--
+  ========================================
+  INDEX.HTML - INTERFAZ PRINCIPAL (SIN FIREBASE)
+  ========================================
+  
+  ¿QUÉ ES ESTE ARCHIVO?
+  Este es el archivo principal de la aplicación.
+  Cuando abres la app en el navegador, cargas este archivo.
+  
+  VERSIÓN SIN FIREBASE:
+  Esta versión funciona completamente offline usando localStorage.
+  No requiere conexión a internet ni configuración de Firebase.
+  
+  ESTRUCTURA DEL ARCHIVO:
+  1. <head>: Meta información (título, descripción, fonts)
+  2. <style>: CSS para la interfaz (colores, layout, animaciones)
+  3. <body>: Elementos HTML que se ven en pantalla
+  4. <script>: JavaScript que hace que todo funcione
+  
+  ¿POR QUÉ ESTÁ TODO EN UN ARCHIVO?
+  - Mantiene la app como Single Page Application (SPA)
+  - Carga rápido (solo 1 archivo)
+  - Fácil de desplegar
+  - Funciona completamente offline
+  
+  ELEMENTOS PRINCIPALES:
+  - <header>: Logo, botón tema, menú hamburguesa
+  - <aside>: Menú lateral con categorías
+  - <main>: Grid de notas
+  - <div id="noteOverlay">: Modal para editar/crear notas
+  - <div id="categoryOverlay">: Modal para gestionar categorías
+  
+  CSS VARIABLES: Usa --colores-variables para cambiar de tema fácilmente
+  data-theme="dark": Atributo que cambia los colores automáticamente
+-->
+
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Personal Notes DEMO — Versión de Demostración</title>
+<meta name="description" content="Aplicación demo para gestión de conocimiento y notas - Versión de demostración sin privilegios administrativos" />
+
+<!-- Meta básico para desarrollo -->
+<meta name="robots" content="noindex" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* === Root colors - DEMO PROFESSIONAL === */
+  :root{
+    --bg-primary: #f8fafc;
+    --bg-secondary:#ffffff;
+    --bg-card:#ffffff;
+    --text-primary:#1e293b;
+    --text-secondary:#475569;
+    --text-muted:#64748b;
+    --accent-primary: #f97316;
+    --accent-hover: #ea580c;
+    --accent-color:#f97316;
+    --border-color:#e2e8f0;
+    --border-light:#f1f5f9;
+    --shadow: rgba(15,23,42,0.08);
+    --shadow-md: rgba(15,23,42,0.12);
+    --shadow-lg: rgba(15,23,42,0.18);
+    --overlay-bg: rgba(15,23,42,0.85);
+    --tag-bg:#f1f5f9;
+    --hover-bg:#f8fafc;
+    --success:#10b981;
+    --danger:#ef4444;
+    /* Demo indicator colors */
+    --demo-bg: #334155;
+    --demo-text: #ffffff;
+    --demo-border: #0ea5e9;
+  }
+  
+  [data-theme="dark"]{
+    --bg-primary: #0f172a;
+    --bg-secondary:#1e293b;
+    --bg-card:#334155;
+    --text-primary:#f1f5f9;
+    --text-secondary:#cbd5e1;
+    --text-muted:#94a3b8;
+    --accent-primary: #f97316;
+    --accent-hover: #ea580c;
+    --accent-color:#f97316;
+    --border-color:#475569;
+    --border-light:#475569;
+    --shadow: rgba(0,0,0,0.4);
+    --shadow-md: rgba(0,0,0,0.5);
+    --shadow-lg: rgba(0,0,0,0.6);
+    --overlay-bg: rgba(0,0,0,0.85);
+    --tag-bg:#475569;
+    --hover-bg:#475569;
+    /* Demo indicator colors for dark */
+    --demo-bg: #1e293b;
+    --demo-text: #ffffff;
+    --demo-border: #0ea5e9;
+  }
+
+  /* === Base === */
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{
+    height:100%;
+    font-family:'Inter',system-ui,-apple-system; 
+    background:#0f172a;
+    color:var(--text-primary); 
+    -webkit-font-smoothing:antialiased;
+  }
+  body{background:var(--bg-primary);background-attachment:fixed}
+  
+  .wrap{max-width:1200px;margin:0 auto;padding:24px}
+
+  /* Header */
+  .top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:20px 28px;
+    background:var(--bg-secondary);
+    border-bottom:4px solid transparent;
+    border-image:var(--accent-primary) 1;
+    box-shadow:0 8px 32px var(--shadow-md);
+    border-radius:20px;
+    backdrop-filter:blur(10px);
+    position:relative;
+    overflow:visible;
+    z-index:100;
+  }
+  
+  .top::before{
+    content:'';
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    height:4px;
+    background:var(--accent-primary);
+  }
+  
+  /* Mobile menu button */
+  .mobile-menu-btn{
+    display:none;
+    background:var(--hover-bg);
+    border:2px solid var(--border-color);
+    font-size:28px;
+    color:var(--text-primary);
+    cursor:pointer;
+    padding:12px;
+    border-radius:10px;
+    transition:all 0.3s ease;
+    min-width:48px;
+    min-height:48px;
+    justify-content:center;
+    align-items:center;
+    box-shadow:0 2px 8px var(--shadow);
+  }
+  
+  .mobile-menu-btn:hover{
+    background:var(--accent-color);
+    color:white;
+    transform:scale(1.05);
+  }
+  
+  .mobile-menu-btn:active{
+    transform:scale(0.95);
+  }
+  
+  /* Desktop - ocultar menú móvil, mostrar acciones normales */
+  @media(min-width:769px){
+    .mobile-menu-btn{
+      display:none !important;
+    }
+    
+    .desktop-actions{
+      display:flex !important;
+    }
+    
+    .mobile-menu{
+      display:none !important;
+    }
+  }
+
+  .brand{display:flex;align-items:center;gap:16px}
+  .mark{
+    width:60px;
+    height:60px;
+    border-radius:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+    font-weight:800;
+    background:var(--accent-primary);
+    box-shadow:0 8px 24px rgba(237,137,54,0.35);
+    font-size:28px;
+    transition:transform 0.3s ease;
+  }
+  
+  .mark:hover{transform:scale(1.05) rotate(5deg)}
+  
+  .site-title{
+    font-weight:800;
+    font-size:20px;
+    letter-spacing:-0.5px;
+    background:var(--accent-primary);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  
+  .site-sub{
+    font-size:13px;
+    color:var(--text-muted);
+    font-weight:500;
+  }
+
+  .actions{display:flex;align-items:center;gap:10px}
+  
+  input.search{
+    padding:12px 16px;
+    border-radius:12px;
+    border:2px solid var(--border-color);
+    background:var(--bg-primary);
+    min-width:240px;
+    font-weight:500;
+    transition:all 0.3s ease;
+    color:var(--text-primary);
+  }
+  
+  input.search:focus{
+    outline:none;
+    border-color:var(--accent-color);
+    box-shadow:0 0 0 4px rgba(237,137,54,0.1);
+  }
+  
+  button.btn{
+    background:var(--accent-primary);
+    color:white;
+    border:none;
+    padding:12px 20px;
+    border-radius:12px;
+    font-weight:700;
+    cursor:pointer;
+    transition:all 0.3s ease;
+    box-shadow:0 4px 12px rgba(237,137,54,0.25);
+    font-size:14px;
+  }
+  
+  button.btn:hover{
+    background:var(--accent-hover);
+    transform:translateY(-2px);
+    box-shadow:0 6px 20px rgba(237,137,54,0.35);
+  }
+  
+  button.btn:active{transform:translateY(0)}
+  
+  button.ghost{
+    background:transparent;
+    color:var(--text-secondary);
+    border:2px solid var(--border-color);
+    padding:10px 16px;
+    border-radius:12px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all 0.3s ease;
+    font-size:14px;
+  }
+  
+  button.ghost:hover{
+    background:var(--hover-bg);
+    border-color:var(--accent-color);
+    color:var(--accent-color);
+    transform:translateY(-2px);
+  }
+  
+  .theme-toggle{
+    width:48px;
+    height:48px;
+    border-radius:12px;
+    border:2px solid var(--border-color);
+    background:var(--bg-card);
+    cursor:pointer;
+    transition:all 0.3s ease;
+    font-size:20px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  
+  .theme-toggle:hover{
+    background:var(--hover-bg);
+    border-color:var(--accent-color);
+    transform:rotate(15deg) scale(1.05);
+  }
+
+  /* Layout */
+  .layout{
+    display:grid;
+    grid-template-columns:280px 1fr;
+    gap:24px;
+    margin-top:24px;
+  }
+  
+  aside.sidebar{
+    background:var(--bg-card);
+    padding:24px;
+    border-radius:20px;
+    border:2px solid var(--border-light);
+    box-shadow:0 8px 32px var(--shadow);
+    height:calc(100vh - 180px);
+    overflow:auto;
+    position:sticky;
+    top:24px;
+  }
+  
+  main.content{
+    padding:0;
+    border-radius:20px;
+    background:transparent;
+  }
+
+  /* Categories */
+  .cat-title{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:16px;
+    font-weight:800;
+    color:var(--text-primary);
+    font-size:16px;
+  }
+  
+  .cat-list{list-style:none;margin-top:8px}
+  
+  .cat-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 14px;
+    border-radius:12px;
+    cursor:pointer;
+    color:var(--text-secondary);
+    margin-bottom:8px;
+    transition:all 0.3s ease;
+    font-weight:600;
+    position:relative;
+  }
+  
+  .cat-item::before{
+    content:'';
+    position:absolute;
+    left:0;
+    top:50%;
+    transform:translateY(-50%);
+    width:3px;
+    height:0;
+    background:var(--accent-primary);
+    border-radius:0 3px 3px 0;
+    transition:height 0.3s ease;
+  }
+  
+  .cat-item:hover{
+    background:var(--hover-bg);
+    color:var(--accent-color);
+    transform:translateX(4px);
+  }
+  
+  .cat-item:hover::before{height:60%}
+  
+  .cat-item.active{
+    background:var(--accent-primary);
+    color:white;
+    box-shadow:0 4px 12px rgba(237,137,54,0.3);
+  }
+  
+  .cat-item.active::before{display:none}
+  
+  .category-count{
+    background:rgba(255,255,255,0.2);
+    padding:2px 8px;
+    border-radius:8px;
+    font-size:12px;
+    font-weight:700;
+  }
+  
+  .cat-item.active .category-count{background:rgba(255,255,255,0.3)}
+
+  /* Notes Grid */
+  .controls{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:20px;
+    background:var(--bg-card);
+    padding:20px 24px;
+    border-radius:20px;
+    box-shadow:0 4px 20px var(--shadow);
+  }
+  
+  .controls h3{
+    font-size:20px;
+    font-weight:800;
+    background:var(--accent-primary);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  
+  .notes-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+    gap:20px;
+  }
+  
+  .card{
+    background:var(--bg-card);
+    padding:24px;
+    border-radius:20px;
+    border:2px solid var(--border-light);
+    box-shadow:0 4px 20px var(--shadow);
+    transition:all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    position:relative;
+    overflow:hidden;
+  }
+  
+  .card::before{
+    content:'';
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    /* height:4px; */
+    background:var(--accent-primary);
+    transform:scaleX(0);
+    transition:transform 0.3s ease;
+  }
+  
+  .card:hover{
+    transform:translateY(-8px);
+    box-shadow:0 12px 40px var(--shadow-lg);
+    border-color:var(--accent-color);
+  }
+  
+  .card:hover::before{transform:scaleX(1)}
+  
+  .card h4{
+    font-size:18px;
+    margin:0;
+    font-weight:700;
+    line-height:1.4;
+  }
+  
+  .meta{
+    font-size:13px;
+    color:var(--text-muted);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-weight:600;
+  }
+  
+  .tags{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+  
+  .tag{
+    background:var(--tag-bg);
+    padding:6px 12px;
+    border-radius:12px;
+    font-size:12px;
+    color:var(--text-secondary);
+    font-weight:600;
+    border:1px solid var(--border-light);
+    transition:all 0.3s ease;
+  }
+  
+  .tag:hover{
+    background:var(--accent-primary);
+    color:white;
+    transform:scale(1.05);
+  }
+
+  /* Modal */
+  .overlay{
+    position:fixed;
+    inset:0;
+    background:var(--overlay-bg);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:2000;
+    backdrop-filter:blur(8px);
+    animation:fadeIn 0.3s ease;
+  }
+  
+  @keyframes fadeIn{
+    from{opacity:0}
+    to{opacity:1}
+  }
+  
+  .overlay.open{display:flex}
+  
+  .modal{
+    background:var(--bg-card);
+    width:100%;
+    max-width:1000px;
+    border-radius:24px;
+    padding:28px;
+    border:2px solid var(--border-light);
+    box-shadow:0 24px 80px var(--shadow-lg);
+    max-height:90vh;
+    overflow:auto;
+    animation:slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  
+  @keyframes slideUp{
+    from{transform:translateY(40px);opacity:0}
+    to{transform:translateY(0);opacity:1}
+  }
+  
+  .modal-head{
+    display:flex;
+    justify-content:space-between;
+    gap:16px;
+    align-items:center;
+    margin-bottom:20px;
+    padding-bottom:16px;
+    border-bottom:2px solid var(--border-light);
+  }
+  
+  .modal-head strong{
+    font-size:22px;
+    font-weight:800;
+    background:var(--accent-primary);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  
+  .modal .fields{
+    display:grid;
+    grid-template-columns:1fr 340px;
+    gap:20px;
+  }
+  
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  
+  .field label{
+    font-weight:700;
+    color:var(--text-secondary);
+    font-size:14px;
+  }
+  
+  .field input,.field textarea,select{
+    padding:14px 16px;
+    border-radius:12px;
+    border:2px solid var(--border-color);
+    background:var(--bg-primary);
+    color:var(--text-primary);
+    font-weight:500;
+    transition:all 0.3s ease;
+    font-family:inherit;
+  }
+  
+  select{
+    color:#1a202c;
+    font-weight:600;
+  }
+  
+  [data-theme="dark"] select{
+    color:#f7fafc;
+    background:#2d3748;
+  }
+  
+  select option{
+    color:#1a202c;
+    background:#ffffff;
+  }
+  
+  [data-theme="dark"] select option{
+    color:#f7fafc;
+    background:#2d3748;
+  }
+  
+  .field input:focus,.field textarea:focus,select:focus{
+    outline:none;
+    border-color:var(--accent-color);
+    box-shadow:0 0 0 4px rgba(237,137,54,0.1);
+  }
+  
+  textarea{
+    min-height:260px;
+    resize:vertical;
+    line-height:1.6;
+  }
+  
+  .preview{
+    background:var(--tag-bg);
+    padding:16px;
+    border-radius:12px;
+    border:2px dashed var(--border-light);
+    overflow:auto;
+    line-height:1.7;
+    max-height:400px;
+  }
+
+  /* Utilities */
+  .muted{color:var(--text-muted);font-size:14px;font-weight:500}
+  .row{display:flex;gap:10px;align-items:center}
+  
+  .fav{
+    cursor:pointer;
+    font-size:24px;
+    transition:all 0.3s ease;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  }
+  
+  .fav:hover{
+    transform:scale(1.2) rotate(15deg);
+    filter:drop-shadow(0 4px 8px rgba(237,137,54,0.4));
+  }
+  
+  .status{font-size:14px;color:var(--text-muted);font-weight:600}
+
+  /* === RESPONSIVE DESIGN === */
+  
+  /* Tablet (768px - 1024px) */
+  @media(max-width:1024px){
+    .wrap{padding:16px}
+    .top{padding:16px 20px;gap:12px}
+    .layout{gap:16px}
+    .modal .fields{grid-template-columns:1fr}
+  }
+  
+  /* Mobile Large (480px - 768px) */
+  @media(max-width:768px){
+    .wrap{padding:12px}
+    
+    /* Header mobile */
+    .top{
+      flex-direction:row;
+      justify-content:space-between;
+      padding:16px;
+      gap:12px;
+    }
+    
+    /* Mostrar botón hamburguesa en móvil */
+    .mobile-menu-btn{
+      display:flex !important;
+      order:3;
+    }
+    
+    .brand{
+      order:1;
+      flex:1;
+    }
+    
+    /* Ocultar menú desktop en móvil */
+    .desktop-actions{
+      display:none !important;
+    }
+    
+    /* Menú móvil desplegable */
+    .mobile-menu{
+      display:flex;
+      position:absolute;
+      top:calc(100% + 8px);
+      left:12px;
+      right:12px;
+      background:var(--bg-secondary) !important;
+      border-radius:15px;
+      box-shadow:0 10px 40px var(--shadow-lg);
+      padding:20px;
+      z-index:9999;
+      flex-direction:column;
+      gap:16px;
+      border:2px solid var(--border-color);
+      opacity:0;
+      visibility:hidden;
+      transform:translateY(-15px);
+      pointer-events:none;
+      transition:all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      backdrop-filter:blur(10px);
+    }
+    
+    .mobile-menu.show{
+      opacity:1;
+      visibility:visible;
+      transform:translateY(0);
+      pointer-events:auto;
+    }
+    
+    .mobile-menu input,
+    .mobile-menu button{
+      width:100% !important;
+      margin:0 !important;
+      padding:16px !important;
+      border-radius:10px !important;
+      font-size:16px !important;
+      border:2px solid var(--border-color) !important;
+      background:var(--bg-card) !important;
+      color:var(--text-primary) !important;
+      transition:all 0.3s ease !important;
+      text-align:left;
+    }
+    
+    .mobile-menu input:focus,
+    .mobile-menu button:hover{
+      border-color:var(--accent-color) !important;
+      box-shadow:0 0 0 3px rgba(237, 137, 54, 0.2) !important;
+      transform:none !important;
+    }
+    
+    .mobile-menu .theme-toggle:hover{
+      transform:none !important;
+    }
+    
+    .mobile-menu .btn{
+      background:var(--accent-primary) !important;
+      color:white !important;
+      border:2px solid var(--accent-color) !important;
+    }
+    
+    .mobile-menu .ghost{
+      background:transparent !important;
+      color:var(--text-primary) !important;
+      border:2px solid var(--border-color) !important;
+    }
+    
+    .logo{font-size:20px}
+    
+    .top-actions{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:8px;
+      width:100%;
+    }
+    
+    .top-actions .btn{
+      font-size:12px;
+      padding:8px 12px;
+      min-width:auto;
+    }
+    
+    /* Layout mobile */
+    .layout{
+      grid-template-columns:1fr;
+      gap:16px;
+    }
+    
+    /* Sidebar mobile */
+    aside.sidebar{
+      position:static;
+      height:auto;
+      order:-1;
+      padding:16px;
+      border-radius:12px;
+    }
+    
+    .sidebar h3{font-size:16px}
+    
+    .cat-list{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    
+    .cat-item{
+      font-size:12px;
+      padding:6px 12px;
+    }
+    
+    /* Search mobile */
+    .search-area{
+      flex-direction:column;
+      gap:12px;
+    }
+    
+    .search-group{
+      width:100%;
+    }
+    
+    .search-group input,
+    .search-group select{
+      width:100%;
+    }
+    
+    /* Actions mobile */
+    .actions{
+      flex-direction:column;
+      gap:12px;
+    }
+    
+    .btn{
+      width:100%;
+      justify-content:center;
+      padding:12px 16px;
+      font-size:14px;
+    }
+    
+    /* Notes grid mobile */
+    .notes-grid{
+      grid-template-columns:1fr;
+    }
+    
+    .note-card{
+      padding:16px;
+    }
+    
+    .note-title{
+      font-size:16px;
+    }
+    
+    .note-meta{
+      flex-direction:column;
+      align-items:flex-start;
+      gap:8px;
+    }
+    
+    /* Modal mobile */
+    .modal{
+      margin:20px !important;
+      max-width:calc(100% - 40px) !important;
+      max-height:calc(100% - 40px);
+    }
+    
+    .modal-header{
+      padding:16px;
+      font-size:18px;
+    }
+    
+    .modal-body{
+      padding:16px;
+    }
+    
+    .modal .fields{
+      grid-template-columns:1fr;
+      gap:12px;
+    }
+    
+    .modal .field input,
+    .modal .field select,
+    .modal .field textarea{
+      width:100%;
+    }
+    
+    .modal textarea{
+      min-height:120px;
+    }
+    
+    .modal-actions{
+      padding:16px;
+      flex-direction:column-reverse;
+      gap:8px;
+    }
+    
+    .modal-actions .btn{
+      width:100%;
+    }
+    
+    /* File upload mobile */
+    .file-upload-section{
+      flex-direction:column;
+      gap:8px;
+    }
+    
+    .file-upload-section .btn{
+      width:100%;
+    }
+    
+    #fileUpload,
+    #linkInput{
+      width:100% !important;
+      min-width:auto !important;
+    }
+  }
+  
+  /* Mobile Small (320px - 480px) */
+  @media(max-width:480px){
+    .wrap{padding:8px}
+    
+    .top{
+      padding:12px;
+      border-radius:12px;
+    }
+    
+    .logo{font-size:18px}
+    
+    .layout{gap:12px}
+    
+    .sidebar{
+      padding:12px;
+    }
+    
+    .note-card{
+      padding:12px;
+    }
+    
+    .note-title{
+      font-size:14px;
+      line-height:1.4;
+    }
+    
+    .note-content{
+      font-size:13px;
+    }
+    
+    .modal{
+      margin:10px !important;
+      max-width:calc(100% - 20px) !important;
+      border-radius:12px;
+    }
+    
+    .modal-header{
+      padding:12px;
+      font-size:16px;
+    }
+    
+    .modal-body{
+      padding:12px;
+    }
+    
+    .modal-actions{
+      padding:12px;
+    }
+    
+    .btn{
+      padding:10px 14px;
+      font-size:13px;
+    }
+    
+    /* Demo styles */
+    .demo-bar{
+      animation: demoGlow 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes demoGlow {
+      from { box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+      to { box-shadow: 0 4px 16px rgba(249,115,22,0.3); }
+    }
+    
+    #pinScreen {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      background: var(--overlay-bg) !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      z-index: 99999 !important;
+      backdrop-filter: blur(8px);
+    }
+    
+    #pinScreen > div {
+      background: var(--bg-card);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+      text-align: center;
+      max-width: 420px;
+      width: 90%;
+      border: 3px solid transparent;
+      background-clip: padding-box;
+      position: relative;
+    }
+    
+    #pinScreen > div::before {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      right: -3px;
+      bottom: -3px;
+      background: var(--accent-color);
+      border-radius: 23px;
+      z-index: -1;
+    }
+    
+    .pin-input-wrapper {
+      position: relative;
+    }
+    
+    .pin-toggle-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--hover-bg);
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 8px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+    
+    .pin-toggle-btn:hover {
+      background: var(--accent-color);
+      color: white;
+      border-color: var(--accent-color);
+    }
+    
+    /* Mejoras profesionales */
+    .top {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+    }
+    
+    [data-theme="dark"] .top {
+      background: rgba(51,65,85,0.95);
+    }
+    
+    .note-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .note-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px var(--shadow-lg);
+    }
+    
+    /* Asegurar visibilidad del layout y sidebar */
+    .layout {
+      min-height: 500px;
+    }
+    
+    .sidebar {
+      min-width: 280px;
+      max-width: 280px;
+    }
+    
+    .cat-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .cat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      margin-bottom: 4px;
+    }
+    
+    .cat-item:hover {
+      background: var(--hover-bg);
+    }
+    
+    .cat-item.active {
+      background: var(--accent-color);
+      color: white;
+    }
+
+    /* Footer mobile */
+    footer{
+      padding:16px;
+      text-align:center;
+    }
+    
+    footer .footer-links{
+      flex-direction:column;
+      gap:8px;
+    }
+    
+    footer a{
+      font-size:12px;
+    }
+  }
+  
+  /* Extra Small Mobile (< 320px) */
+  @media(max-width:320px){
+    .wrap{padding:4px}
+    .logo{font-size:16px}
+    .btn{font-size:12px;padding:8px 10px}
+    .note-title{font-size:13px}
+    .note-content{font-size:12px}
+  }
+
+  /* Toast */
+  .toast{
+    position:fixed;
+    right:24px;
+    bottom:24px;
+    background:linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    color:#fff;
+    padding:16px 24px;
+    border-radius:12px;
+    z-index:3000;
+    box-shadow:0 8px 32px rgba(0,0,0,0.3);
+    font-weight:600;
+    animation:slideInRight 0.3s ease;
+    border:2px solid rgba(255,255,255,0.1);
+  }
+  
+  @keyframes slideInRight{
+    from{transform:translateX(400px);opacity:0}
+    to{transform:translateX(0);opacity:1}
+  }
+  
+  /* Scrollbar */
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-track{background:var(--bg-primary);border-radius:10px}
+  ::-webkit-scrollbar-thumb{background:var(--accent-primary);border-radius:10px}
+  ::-webkit-scrollbar-thumb:hover{background:var(--accent-hover)}
+  
+  /* PIN Screen Enhanced */
+  #pinScreen{
+    position:fixed;
+    inset:0;
+    background:linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:2500;
+  }
+  
+  #pinScreen > div{
+    background:var(--bg-card);
+    padding:40px;
+    border-radius:24px;
+    box-shadow:0 24px 80px rgba(0,0,0,0.3);
+    width:420px;
+    text-align:center;
+    animation:scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  
+  @keyframes scaleIn{
+    from{transform:scale(0.8);opacity:0}
+    to{transform:scale(1);opacity:1}
+  }
+  
+  #pinScreen h2{
+    font-size:28px;
+    font-weight:800;
+    margin-bottom:8px;
+  }
+  
+  #pinInput{
+    font-size:18px;
+    letter-spacing:4px;
+    text-align:center;
+    font-weight:700;
+  }
+  
+  /* Pin toggle visibility */
+  .pin-input-wrapper{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    width:100%;
+  }
+  
+  .pin-input-wrapper input{
+    flex:1;
+  }
+  
+  .pin-toggle-btn{
+    background:var(--bg-card);
+    border:2px solid var(--border-color);
+    cursor:pointer;
+    font-size:20px;
+    padding:10px 14px;
+    transition:all 0.3s ease;
+    border-radius:8px;
+    min-width:50px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  
+  .pin-toggle-btn:hover{
+    background:var(--hover-bg);
+    border-color:var(--accent-color);
+    transform:scale(1.05);
+  }
+</style>
+</head>
+<body data-theme="light">
+  <!-- BARRA DE DEMO -->
+  <div style="background: var(--demo-bg); color: var(--demo-text); text-align: center; padding: 12px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); position: sticky; top: 0; z-index: 1000; border-bottom: 2px solid var(--demo-border); backdrop-filter: blur(10px);">
+    📚 VERSIÓN DEMO - Diario Personal de Estudio • PIN de acceso: 1234 • Solo demostración
+  </div>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <div class="mark">📖</div>
+        <div>
+          <div class="site-title">Personal Notes/div>
+          <div class="site-sub">🎓 Diario Digital de Estudios — Demo</div>
+        </div>
+      </div>
+
+      <button class="mobile-menu-btn" id="mobileMenuBtn" title="Menú">☰</button>
+
+      <!-- Menú normal desktop -->
+      <div class="actions desktop-actions">
+        <input class="search" id="search" placeholder="Buscar por título, contenido o etiquetas..." />
+        <button class="theme-toggle" id="themeBtn" title="Cambiar tema">🌙</button>
+        <button class="btn" id="openPinSettings">Ajustes PIN</button>
+        <button class="ghost" id="logoutBtn" title="Cerrar sesión">🚪 Salir</button>
+      </div>
+
+      <!-- Menú móvil desplegable -->
+      <div class="mobile-menu" id="mobileMenu">
+        <input class="search" id="searchMobile" placeholder="Buscar por título, contenido o etiquetas..." />
+        <button class="theme-toggle" id="themeBtnMobile" title="Cambiar tema">🌙 Cambiar Tema</button>
+        <button class="btn" id="openPinSettingsMobile">⚙️ Ajustes PIN</button>
+        <button class="ghost" id="logoutBtnMobile" title="Cerrar sesión">🚪 Salir</button>
+      </div>
+    </header>
+
+    <!-- LOGIN (PIN) SCREEN - HABILITADO PARA DEMO -->
+    <div id="pinScreen" style="display: flex;">
+      <div>
+        <div style="font-size:48px;margin-bottom:20px">📚</div>
+<h2 style="margin-bottom:8px;color:var(--accent-color);font-weight:800;">Personal Notes Demo</h2>
+        <p style="margin-bottom:8px;font-size:16px;color:var(--text-secondary)">Diario Personal de Estudios</p>
+        <p class="muted" style="margin-bottom:20px;font-size:14px">PIN de acceso: <strong style="color:var(--accent-color)">1234</strong></p>
+        <div style="margin-bottom:24px;color:var(--demo-text);font-size:13px;background:var(--demo-bg);padding:12px;border-radius:10px;border-left:4px solid var(--demo-border)">
+          🎯 <strong>Versión de Demostración</strong><br>
+          Solo para mostrar funcionalidades básicas
+        </div>
+        <div class="pin-input-wrapper" style="margin-bottom:12px">
+          <input id="pinInput" type="password" placeholder="PIN (4-6 dígitos)" inputmode="numeric" autocomplete="off" style="width:100%;padding:12px;border-radius:8px;border:1px solid var(--border-color);text-align:center;font-weight:600" />
+          <button class="pin-toggle-btn" id="pinToggle" type="button" title="Mostrar/Ocultar PIN">👁️</button>
+        </div>
+        <div style="display:flex;gap:12px;justify-content:center">
+          <button class="btn" id="pinBtn">Ingresar</button>
+        </div>
+        <p id="pinMsg" class="muted" style="margin-top:16px;display:none;color:#f56565;font-weight:600"></p>
+      </div>
+    </div>
+
+    <div class="layout" style="display: none;">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div>
+          <div class="cat-title">
+            <div>📂 Categorías</div>
+            <button class="ghost" id="addCategory">+ Nueva</button>
+          </div>
+
+          <ul class="cat-list" id="categoryList">
+            <!-- dynamically rendered -->
+          </ul>
+        </div>
+
+        <hr style="margin:20px 0;border:none;border-top:2px dashed var(--border-light)">
+
+        <div style="margin-top:24px">
+          <div class="muted" style="font-weight:700;margin-bottom:8px">Estado</div>
+          <div id="statusInfo" class="muted">Funcionando en modo local</div>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main class="content">
+        <div class="controls">
+          <div>
+            <h3 id="currentTitle">📝 Todas las notas</h3>
+            <div class="muted" id="subInfo">Tus notas guardadas localmente</div>
+          </div>
+          <div class="row" style="gap:16px;flex-wrap:wrap">
+            <button class="btn" id="btnNewNote" style="margin:0">+ Nueva Nota</button>
+            <button class="ghost" id="btnFavorites" style="margin:0">⭐ Favoritas</button>
+            <button class="ghost" id="btnAll" style="margin:0">📋 Todas</button>
+            <div class="status" id="savedStatus" style="margin-left:auto">—</div>
+          </div>
+        </div>
+
+        <section>
+          <div class="notes-grid" id="notesGrid">
+            <!-- cards -->
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal: Note -->
+  <div class="overlay" id="noteOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <strong id="modalTitle">Nueva nota</strong>
+        <div class="row">
+          <span id="wordCount" class="muted">0 palabras</span>
+          <button class="btn" id="saveNoteBtn">Guardar</button>
+          <button class="ghost" id="closeNoteBtn">Cerrar</button>
+        </div>
+      </div>
+
+      <div class="fields">
+        <div style="min-width:0">
+          <div class="field">
+            <label>Título</label>
+            <input id="noteTitle" placeholder="Título..." />
+          </div>
+
+          <div class="field" style="margin-top:16px">
+            <label>Contenido (Markdown simple)</label>
+            <textarea id="noteContent" placeholder="Escribe aquí..."></textarea>
+          </div>
+
+          <div style="display:flex;gap:12px;margin-top:16px;align-items:center;flex-wrap:wrap">
+            <input id="noteTags" placeholder="Etiquetas, separadas por comas" style="flex:1;min-width:200px" />
+            <select id="noteCategory" style="min-width:180px">
+              <!-- categories -->
+            </select>
+            <label class="row muted" style="cursor:pointer">
+              <input type="checkbox" id="noteFav" /> Favorita
+            </label>
+          </div>
+
+        </div>
+
+        <aside style="width:340px">
+          <div style="font-weight:700;margin-bottom:12px;font-size:16px">Vista previa</div>
+          <div class="preview" id="notePreview">Preview (Markdown)</div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: PIN Settings -->
+  <div class="overlay" id="pinOverlay" aria-hidden="true">
+    <div class="modal" style="max-width:500px">
+      <div class="modal-head">
+        <strong>Cambiar PIN</strong>
+        <button class="ghost" id="closePinSettings">Cerrar</button>
+      </div>
+
+      <div style="padding:8px 0 20px">
+        <div class="field">
+          <label>PIN actual</label>
+          <div class="pin-input-wrapper">
+            <input id="curPin" type="password" placeholder="PIN actual" autocomplete="off" />
+            <button class="pin-toggle-btn" id="curPinToggle" type="button" title="Mostrar/Ocultar">👁️</button>
+          </div>
+        </div>
+        <div class="field" style="margin-top:16px">
+          <label>Nuevo PIN (4-6 números)</label>
+          <div class="pin-input-wrapper">
+            <input id="newPin" type="password" placeholder="Nuevo PIN" autocomplete="off" />
+            <button class="pin-toggle-btn" id="newPinToggle" type="button" title="Mostrar/Ocultar">👁️</button>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:20px;justify-content:flex-end">
+          <button class="btn" id="changePinBtn">Cambiar PIN</button>
+        </div>
+        <p id="pinChangeMsg" class="muted" style="margin-top:16px;font-weight:600"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Category -->
+  <div class="overlay" id="categoryOverlay" aria-hidden="true">
+    <div class="modal" style="max-width:500px">
+      <div class="modal-head">
+        <strong id="categoryModalTitle">Editar Categoría</strong>
+        <button class="ghost" id="closeCategoryModal">Cerrar</button>
+      </div>
+
+      <div style="padding:8px 0 20px">
+        <div class="field">
+          <label>Nombre de la categoría</label>
+          <input id="categoryName" placeholder="Nombre..." />
+        </div>
+        
+        <div class="field" style="margin-top:16px">
+          <label>Icono (emoji)</label>
+          <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin-top:8px;max-height:200px;overflow:auto;padding:8px;background:var(--tag-bg);border-radius:12px">
+            <button class="emoji-btn" data-emoji="📖">📖</button>
+            <button class="emoji-btn" data-emoji="📝">📝</button>
+            <button class="emoji-btn" data-emoji="🎓">🎓</button>
+            <button class="emoji-btn" data-emoji="📚">📚</button>
+            <button class="emoji-btn" data-emoji="📓">📓</button>
+            <button class="emoji-btn" data-emoji="📔">📔</button>
+            <button class="emoji-btn" data-emoji="📋">📋</button>
+            <button class="emoji-btn" data-emoji="📁">📁</button>
+            <button class="emoji-btn" data-emoji="📊">📊</button>
+            <button class="emoji-btn" data-emoji="📈">📈</button>
+            <button class="emoji-btn" data-emoji="✏️">✏️</button>
+            <button class="emoji-btn" data-emoji="✂️">✂️</button>
+            <button class="emoji-btn" data-emoji="🔬">🔬</button>
+            <button class="emoji-btn" data-emoji="🧪">🧪</button>
+            <button class="emoji-btn" data-emoji="💻">💻</button>
+            <button class="emoji-btn" data-emoji="🔭">🔭</button>
+            <button class="emoji-btn" data-emoji="💡">💡</button>
+            <button class="emoji-btn" data-emoji="✨">✨</button>
+            <button class="emoji-btn" data-emoji="🎯">🎯</button>
+            <button class="emoji-btn" data-emoji="🚀">🚀</button>
+            <button class="emoji-btn" data-emoji="⭐">⭐</button>
+            <button class="emoji-btn" data-emoji="🏆">🏆</button>
+            <button class="emoji-btn" data-emoji="🌟">🌟</button>
+            <button class="emoji-btn" data-emoji="🔥">🔥</button>
+          </div>
+          <input id="categoryIcon" placeholder="Selecciona o escribe un emoji" style="margin-top:12px" />
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:20px;justify-content:space-between">
+          <button class="ghost" id="deleteCategoryBtn" style="background:var(--danger);color:white;border:none">🗑️ Eliminar</button>
+          <button class="btn" id="saveCategoryBtn">Guardar</button>
+        </div>
+        <p id="categoryMsg" class="muted" style="margin-top:16px;font-weight:600"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer style="background:var(--bg-card);border-top:2px solid var(--border-light);padding:20px 24px;margin-top:40px;text-align:center">
+    <div style="max-width:800px;margin:0 auto">
+      <div style="display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin-bottom:16px">
+        <a href="https://es.wikipedia.org" target="_blank" rel="noopener noreferrer" style="color:var(--accent-color);text-decoration:none;font-weight:600;transition:all 0.3s ease">📖 Wikipedia</a>
+        <a href="https://scholar.google.com" target="_blank" rel="noopener noreferrer" style="color:var(--accent-color);text-decoration:none;font-weight:600;transition:all 0.3s ease">🎓 Google Académico</a>
+        <a href="https://www.coursera.org" target="_blank" rel="noopener noreferrer" style="color:var(--accent-color);text-decoration:none;font-weight:600;transition:all 0.3s ease">🏫 Coursera</a>
+        <a href="https://www.edx.org" target="_blank" rel="noopener noreferrer" style="color:var(--accent-color);text-decoration:none;font-weight:600;transition:all 0.3s ease">📚 edX</a>
+        <a href="https://www.khanacademy.org" target="_blank" rel="noopener noreferrer" style="color:var(--accent-color);text-decoration:none;font-weight:600;transition:all 0.3s ease">🧮 Khan Academy</a>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);line-height:1.5">
+        <p style="margin:0 0 8px 0">� <strong>KnowledgeHub DEMO</strong> - Diario Personal de Estudio</p>
+        <p style="margin:0 0 4px 0">Versión de demostración • PIN de acceso: <code>1234</code></p>
+        <p style="margin:0">💡 "El conocimiento es poder, y compartirlo es sabiduría"</p>
+      </div>
+    </div>
+  </footer>
+
+  <div id="toastRoot"></div>
+
+<!-- Sistema de Protección DESHABILITADO para acceso completo de desarrollador -->
+<script src="./simple-protection.js"></script>
+
+<script type="module" src="./app-local.js"></script>
+
+<script>
+// Sistema PIN para versión DEMO
+(function() {
+  'use strict';
+  
+  const DEMO_PIN = '1234';
+  let isAuthenticated = false;
+  
+  // Elementos
+  const pinScreen = document.getElementById('pinScreen');
+  const pinInput = document.getElementById('pinInput');
+  const pinBtn = document.getElementById('pinBtn');
+  const pinMsg = document.getElementById('pinMsg');
+  const pinToggle = document.getElementById('pinToggle');
+  const layout = document.querySelector('.layout');
+  const wrap = document.querySelector('.wrap');
+  
+  // Mostrar PIN al cargar (para demo)
+  if (pinInput) pinInput.value = DEMO_PIN;
+  
+  function showError(msg) {
+    if (pinMsg) {
+      pinMsg.textContent = msg;
+      pinMsg.style.display = 'block';
+      setTimeout(() => {
+        if (pinMsg) pinMsg.style.display = 'none';
+      }, 3000);
+    }
+  }
+  
+  function authenticate() {
+    const inputPin = pinInput ? pinInput.value.trim() : '';
+    
+    if (inputPin === DEMO_PIN) {
+      isAuthenticated = true;
+      if (pinScreen) pinScreen.style.display = 'none';
+      if (layout) {
+        layout.style.display = 'grid';
+        layout.style.gridTemplateColumns = '280px 1fr';
+        layout.style.gap = '24px';
+      }
+      console.log('✅ Acceso concedido - Versión DEMO');
+    } else {
+      showError('❌ PIN incorrecto. Para esta demo usa: 1234');
+      if (pinInput) pinInput.value = DEMO_PIN; // Mostrar PIN correcto
+    }
+  }
+  
+  // Toggle visibilidad PIN
+  if (pinToggle) {
+    pinToggle.addEventListener('click', function() {
+      if (pinInput) {
+        const isPassword = pinInput.type === 'password';
+        pinInput.type = isPassword ? 'text' : 'password';
+        this.textContent = isPassword ? '👁️' : '🙈';
+      }
+    });
+  }
+  
+  // Botón ingresar
+  if (pinBtn) {
+    pinBtn.addEventListener('click', authenticate);
+  }
+  
+  // Enter en input
+  if (pinInput) {
+    pinInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        authenticate();
+      }
+    });
+  }
+  
+  // Botón salir
+  const logoutBtns = document.querySelectorAll('#logoutBtn, #logoutBtnMobile');
+  logoutBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      if (confirm('¿Salir de la versión demo?')) {
+        isAuthenticated = false;
+        if (pinScreen) pinScreen.style.display = 'flex';
+        if (layout) layout.style.display = 'none';
+        if (pinInput) pinInput.value = DEMO_PIN;
+        console.log('📋 Sesión demo cerrada');
+      }
+    });
+  });
+  
+  // Botón ajustes PIN (deshabilitado en demo)
+  const pinSettingsBtns = document.querySelectorAll('#openPinSettings, #openPinSettingsMobile');
+  pinSettingsBtns.forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      alert('🚀 Función no disponible en versión DEMO\n\nEl PIN está fijo en: 1234\nNo se puede cambiar en esta versión de demostración.');
+    });
+  });
+  
+  // Inicialización correcta - ejecutar inmediatamente
+  function initPinSystem() {
+    console.log('🔍 Inicializando sistema PIN...');
+    
+    // Forzar ocultación del contenido principal
+    const layoutEl = document.querySelector('.layout');
+    if (layoutEl) {
+      layoutEl.style.display = 'none';
+      console.log('✅ Layout oculto');
+    }
+    
+    // Forzar mostrar pantalla PIN
+    const pinScreenEl = document.getElementById('pinScreen');
+    if (pinScreenEl) {
+      pinScreenEl.style.display = 'flex';
+      pinScreenEl.style.position = 'fixed';
+      pinScreenEl.style.top = '0';
+      pinScreenEl.style.left = '0';
+      pinScreenEl.style.width = '100vw';
+      pinScreenEl.style.height = '100vh';
+      pinScreenEl.style.zIndex = '9999';
+      console.log('✅ PIN screen mostrado');
+    }
+    
+    // Pre-rellenar PIN para demo
+    const pinInputEl = document.getElementById('pinInput');
+    if (pinInputEl) {
+      pinInputEl.value = DEMO_PIN;
+      setTimeout(() => pinInputEl.focus(), 100);
+      console.log('✅ PIN pre-rellenado');
+    }
+    
+    console.log('🚀 Sistema PIN DEMO inicializado - PIN: 1234');
+  }
+  
+  // Ejecutar inmediatamente y también cuando DOM esté listo
+  initPinSystem();
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPinSystem);
+  }
+  
+  // Ejecutar después de que todo esté cargado
+  window.addEventListener('load', initPinSystem);
+})();
+
+// Mobile menu functionality - Versión simplificada y funcional
+console.log('🚀 Iniciando menú hamburguesa...');
+
+function initMobileMenu() {
+  const menuBtn = document.getElementById('mobileMenuBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+  
+  console.log('📱 Botón encontrado:', !!menuBtn);
+  console.log('📋 Menú encontrado:', !!mobileMenu);
+  
+  if (!menuBtn || !mobileMenu) {
+    console.error('❌ Elementos no encontrados');
+    return;
+  }
+  
+  // Toggle del menú
+  menuBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const isOpen = mobileMenu.classList.contains('show');
+    
+    if (isOpen) {
+      mobileMenu.classList.remove('show');
+      menuBtn.innerHTML = '☰';
+      console.log('🔒 Menú cerrado');
+    } else {
+      mobileMenu.classList.add('show');
+      menuBtn.innerHTML = '✕';
+      console.log('📂 Menú abierto');
+    }
+  });
+  
+  // Cerrar al hacer clic afuera
+  document.addEventListener('click', function(e) {
+    if (mobileMenu.classList.contains('show')) {
+      if (!menuBtn.contains(e.target) && !mobileMenu.contains(e.target)) {
+        mobileMenu.classList.remove('show');
+        menuBtn.innerHTML = '☰';
+        console.log('🔒 Menú cerrado (clic externo)');
+      }
+    }
+  });
+  
+  // Cerrar en resize
+  window.addEventListener('resize', function() {
+    if (window.innerWidth > 768 && mobileMenu.classList.contains('show')) {
+      mobileMenu.classList.remove('show');
+      menuBtn.innerHTML = '☰';
+      console.log('🔒 Menú cerrado (resize)');
+    }
+  });
+  
+  // Sincronizar botones móviles con los de desktop
+  const themeBtnMobile = document.getElementById('themeBtnMobile');
+  const themeBtn = document.getElementById('themeBtn');
+  
+  if (themeBtnMobile && themeBtn) {
+    themeBtnMobile.addEventListener('click', function() {
+      themeBtn.click();
+      mobileMenu.classList.remove('show');
+      menuBtn.innerHTML = '☰';
+    });
+  }
+  
+  const pinSettingsMobile = document.getElementById('openPinSettingsMobile');
+  const pinSettings = document.getElementById('openPinSettings');
+  
+  if (pinSettingsMobile && pinSettings) {
+    pinSettingsMobile.addEventListener('click', function() {
+      pinSettings.click();
+      mobileMenu.classList.remove('show');
+      menuBtn.innerHTML = '☰';
+    });
+  }
+  
+  const logoutMobile = document.getElementById('logoutBtnMobile');
+  const logout = document.getElementById('logoutBtn');
+  
+  if (logoutMobile && logout) {
+    logoutMobile.addEventListener('click', function() {
+      logout.click();
+      mobileMenu.classList.remove('show');
+      menuBtn.innerHTML = '☰';
+    });
+  }
+  
+  // Sincronizar búsqueda
+  const searchMobile = document.getElementById('searchMobile');
+  const search = document.getElementById('search');
+  
+  if (searchMobile && search) {
+    searchMobile.addEventListener('input', function() {
+      search.value = this.value;
+      search.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  }
+  
+  console.log('✅ Menú hamburguesa configurado');
+}
+
+// Inicializar
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initMobileMenu);
+} else {
+  initMobileMenu();
+}
+</script>
+
+<!-- SCRIPT DE SEGURIDAD PARA FORZAR PIN SCREEN -->
+<script>
+console.log('🔒 Script de seguridad PIN iniciado');
+
+// Función para forzar PIN screen
+function forcePinScreen() {
+  console.log('🔒 Ejecutando forcePinScreen()');
+  
+  const pinScreen = document.getElementById('pinScreen');
+  const layout = document.querySelector('.layout');
+  
+  if (pinScreen && layout) {
+    // Forzar mostrar PIN screen
+    pinScreen.style.cssText = `
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      background: rgba(15,23,42,0.85) !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      z-index: 99999 !important;
+      backdrop-filter: blur(8px) !important;
+    `;
+    
+    // Forzar ocultar layout
+    layout.style.display = 'none !important';
+    
+    console.log('✅ PIN screen forzado a mostrarse');
+    
+    // Pre-rellenar PIN
+    const pinInput = document.getElementById('pinInput');
+    if (pinInput && !pinInput.value) {
+      pinInput.value = '1234';
+    }
+  }
+}
+
+// Ejecutar inmediatamente
+forcePinScreen();
+
+// Ejecutar después de 100ms por si hay interferencia
+setTimeout(forcePinScreen, 100);
+
+// Ejecutar cuando el DOM esté completamente cargado
+document.addEventListener('DOMContentLoaded', forcePinScreen);
+
+// Ejecutar cuando todo esté cargado
+window.addEventListener('load', forcePinScreen);
+
+console.log('🔒 Script de seguridad PIN configurado');
+</script>
+
+</body>
+</html>

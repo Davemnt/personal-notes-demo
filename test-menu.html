@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Menú Hamburguesa - Desarrollo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: white;
+            padding: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ed8936;
+        }
+
+        /* Botón hamburguesa - visible solo en móvil */
+        .menu-btn {
+            display: none;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            font-size: 28px;
+            color: #1a202c;
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 10px;
+            min-width: 48px;
+            min-height: 48px;
+        }
+
+        .menu-btn:hover {
+            background: #ed8936;
+            color: white;
+        }
+
+        /* Menú normal - visible en desktop */
+        .nav-menu {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .nav-menu input,
+        .nav-menu button {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            font-size: 14px;
+        }
+
+        .nav-menu input {
+            width: 250px;
+        }
+
+        .nav-menu button {
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-menu button:hover {
+            background: #ed8936;
+            color: white;
+            border-color: #ed8936;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .menu-btn {
+                display: block;
+            }
+
+            .nav-menu {
+                display: none;
+                position: absolute;
+                top: calc(100% + 8px);
+                left: 16px;
+                right: 16px;
+                background: white;
+                border-radius: 15px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                padding: 20px;
+                flex-direction: column;
+                z-index: 1000;
+                gap: 16px;
+                border: 2px solid #e2e8f0;
+            }
+
+            .nav-menu.show {
+                display: flex;
+            }
+
+            .nav-menu input,
+            .nav-menu button {
+                width: 100%;
+                padding: 14px;
+            }
+
+            .nav-menu input {
+                order: 1;
+            }
+
+            .nav-menu button {
+                order: 2;
+            }
+        }
+
+        .content {
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .test-info {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .test-info h2 {
+            color: #ed8936;
+            margin-bottom: 20px;
+        }
+
+        .test-info ul {
+            text-align: left;
+            list-style-position: inside;
+            line-height: 2;
+        }
+
+        .device-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">📖 Temas del Evangelio</div>
+        
+        <button class="menu-btn" id="menuBtn">☰</button>
+        
+        <nav class="nav-menu" id="navMenu">
+            <input type="text" placeholder="🔍 Buscar...">
+            <button>🌙 Tema</button>
+            <button>⚙️ Ajustes</button>
+            <button>🚪 Salir</button>
+        </nav>
+    </header>
+
+    <div class="content">
+        <div class="test-info">
+            <h2>🧪 Test del Menú Hamburguesa</h2>
+            <p><strong>Versión de Desarrollo</strong></p>
+            
+            <ul>
+                <li>✅ Sin restricciones de seguridad</li>
+                <li>✅ Puedes inspeccionar con F12</li>
+                <li>✅ Funciona en localhost:5500</li>
+                <li>✅ Logs en consola habilitados</li>
+            </ul>
+
+            <div class="device-info">
+                <div><strong>Ancho de pantalla:</strong> <span id="screenWidth"></span>px</div>
+                <div><strong>Dispositivo:</strong> <span id="deviceType"></span></div>
+                <div><strong>Menú visible:</strong> <span id="menuStatus">❌</span></div>
+            </div>
+
+            <div style="margin-top: 30px; padding: 20px; background: #fff3cd; border-radius: 8px;">
+                <p><strong>📱 Para probar en móvil:</strong></p>
+                <p>Presiona F12 → Toggle Device Toolbar → Selecciona un dispositivo móvil</p>
+                <p>O reduce el ancho del navegador a menos de 768px</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('🚀 Test del menú hamburguesa iniciado');
+        
+        const menuBtn = document.getElementById('menuBtn');
+        const navMenu = document.getElementById('navMenu');
+        
+        // Actualizar info de dispositivo
+        function updateDeviceInfo() {
+            const width = window.innerWidth;
+            document.getElementById('screenWidth').textContent = width;
+            document.getElementById('deviceType').textContent = width <= 768 ? '📱 Móvil' : '💻 Desktop';
+            
+            const isMobile = width <= 768;
+            const btnVisible = window.getComputedStyle(menuBtn).display !== 'none';
+            
+            console.log('📊 Info actual:');
+            console.log('  - Ancho:', width);
+            console.log('  - Es móvil:', isMobile);
+            console.log('  - Botón visible:', btnVisible);
+        }
+        
+        updateDeviceInfo();
+        window.addEventListener('resize', updateDeviceInfo);
+        
+        // Toggle del menú
+        menuBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const isOpen = navMenu.classList.contains('show');
+            
+            if (isOpen) {
+                navMenu.classList.remove('show');
+                menuBtn.textContent = '☰';
+                document.getElementById('menuStatus').textContent = '❌';
+                console.log('🔒 Menú cerrado');
+            } else {
+                navMenu.classList.add('show');
+                menuBtn.textContent = '✕';
+                document.getElementById('menuStatus').textContent = '✅';
+                console.log('📂 Menú abierto');
+            }
+        });
+        
+        // Cerrar al hacer clic afuera
+        document.addEventListener('click', function(e) {
+            if (!menuBtn.contains(e.target) && !navMenu.contains(e.target)) {
+                if (navMenu.classList.contains('show')) {
+                    navMenu.classList.remove('show');
+                    menuBtn.textContent = '☰';
+                    document.getElementById('menuStatus').textContent = '❌';
+                    console.log('🔒 Menú cerrado (clic externo)');
+                }
+            }
+        });
+        
+        // Cerrar en resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768 && navMenu.classList.contains('show')) {
+                navMenu.classList.remove('show');
+                menuBtn.textContent = '☰';
+                document.getElementById('menuStatus').textContent = '❌';
+                console.log('🔒 Menú cerrado (resize)');
+            }
+        });
+        
+        console.log('✅ Menú hamburguesa configurado');
+        console.log('📱 Botón:', menuBtn);
+        console.log('📋 Menú:', navMenu);
+    </script>
+</body>
+</html>

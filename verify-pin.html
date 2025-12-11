@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar PIN</title>
+    <!-- Sistema de Protección de Inspección -->
+    <!-- <script src="./security-protection.js"></script> -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        input {
+            padding: 10px;
+            margin: 10px 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 200px;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .error {
+            color: #d32f2f;
+            background: #ffebee;
+        }
+        .success {
+            color: #2e7d32;
+            background: #e8f5e8;
+        }
+    </style>
+  <!-- Sistema de Protección de Inspección - DESACTIVADO -->
+  <!-- <script src="./security-protection.js"></script> -->
+</head>
+<body>
+    <div class="container">
+        <h2>🔍 Verificar y Configurar PIN</h2>
+        
+        <div>
+            <h3>Verificar PIN Actual:</h3>
+            <button onclick="checkCurrentPin()">Ver PIN Actual</button>
+        </div>
+
+        <div>
+            <h3>Establecer Nuevo PIN:</h3>
+            <input type="text" id="newPin" placeholder="Nuevo PIN (4-8 dígitos)" maxlength="8">
+            <button onclick="setNewPin()">Establecer PIN</button>
+        </div>
+
+        <div>
+            <h3>Inicializar Usuario (si no existe):</h3>
+            <button onclick="initUser()">Crear Usuario con PIN 1234</button>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js';
+
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBxLPJYOIPMqKByPqyKSMkJpoZJgEtfLvA",
+            authDomain: "temasdelevangelio-3cfa4.firebaseapp.com",
+            projectId: "temasdelevangelio-3cfa4",
+            storageBucket: "temasdelevangelio-3cfa4.firebasestorage.app",
+            messagingSenderId: "85666056968",
+            appId: "1:85666056968:web:f5a1a3a3de83f3f8e690c2"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        function showResult(message, isError = false) {
+            const result = document.getElementById('result');
+            result.innerHTML = message;
+            result.className = isError ? 'error' : 'success';
+        }
+
+        window.checkCurrentPin = async function() {
+            try {
+                const userRef = doc(db, "users", "mainUser");
+                const userSnap = await getDoc(userRef);
+                
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    showResult(`✅ PIN actual: <strong>${userData.pin}</strong><br>
+                              📅 Última actualización: ${userData.updatedAt || 'No disponible'}`);
+                } else {
+                    showResult("❌ No se encontró el documento del usuario. Necesitas inicializar.", true);
+                }
+            } catch (error) {
+                showResult(`❌ Error: ${error.message}`, true);
+            }
+        };
+
+        window.setNewPin = async function() {
+            const newPin = document.getElementById('newPin').value.trim();
+            
+            if (!newPin) {
+                showResult("❌ Por favor ingresa un PIN", true);
+                return;
+            }
+
+            if (!/^\d{4,8}$/.test(newPin)) {
+                showResult("❌ El PIN debe tener entre 4 y 8 dígitos", true);
+                return;
+            }
+
+            try {
+                const userRef = doc(db, "users", "mainUser");
+                await updateDoc(userRef, {
+                    pin: newPin,
+                    updatedAt: new Date().toISOString()
+                });
+                
+                showResult(`✅ PIN actualizado a: <strong>${newPin}</strong>`);
+                document.getElementById('newPin').value = '';
+            } catch (error) {
+                showResult(`❌ Error actualizando PIN: ${error.message}`, true);
+            }
+        };
+
+        window.initUser = async function() {
+            try {
+                const userRef = doc(db, "users", "mainUser");
+                await setDoc(userRef, {
+                    pin: "1234",
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                });
+                
+                showResult("✅ Usuario inicializado con PIN 1234");
+            } catch (error) {
+                showResult(`❌ Error inicializando usuario: ${error.message}`, true);
+            }
+        };
+
+        // Auto-verificar al cargar
+        setTimeout(() => {
+            checkCurrentPin();
+        }, 1000);
+    </script>
+</body>
+</html>

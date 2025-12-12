@@ -48,54 +48,80 @@
 <style>
   /* === Root colors - DEMO PROFESSIONAL === */
   :root{
-    --bg-primary: #f8fafc;
-    --bg-secondary:#ffffff;
-    --bg-card:#ffffff;
-    --text-primary:#1e293b;
-    --text-secondary:#475569;
-    --text-muted:#64748b;
-    --accent-primary: #f97316;
-    --accent-hover: #ea580c;
-    --accent-color:#f97316;
-    --border-color:#e2e8f0;
-    --border-light:#f1f5f9;
-    --shadow: rgba(15,23,42,0.08);
-    --shadow-md: rgba(15,23,42,0.12);
-    --shadow-lg: rgba(15,23,42,0.18);
-    --overlay-bg: rgba(15,23,42,0.85);
-    --tag-bg:#f1f5f9;
-    --hover-bg:#f8fafc;
-    --success:#10b981;
-    --danger:#ef4444;
-    /* Demo indicator colors */
-    --demo-bg: #334155;
-    --demo-text: #ffffff;
-    --demo-border: #0ea5e9;
-  }
+  /* Fondos */
+  --bg-primary: #f8faff; /* Blanco muy suave, casi azulado */
+  --bg-secondary:#ffffff; /* Blanco puro para elementos principales */
+  --bg-card:#ffffff; /* Blanco puro */
+
+  /* Textos */
+  --text-primary:#1a202c; /* Gris oscuro para el texto principal */
+  --text-secondary:#4a5568; /* Gris medio para texto secundario */
+  --text-muted:#718096; /* Gris claro para texto silenciado/ayuda */
+
+  /* Acento (Azul/Cian) */
+  --accent-primary: #06b6d4; /* Azul Cian brillante como acento principal */
+  --accent-hover: #0891b2; /* Tono más oscuro de cian al pasar el ratón */
+  --accent-color:#06b6d4; /* Color de acento general */
+
+  /* Bordes y Sombras */
+  --border-color:#e2e8f0; /* Borde gris claro */
+  --border-light:#edf2f7; /* Borde muy claro */
+  --shadow: rgba(15, 23, 42, 0.08);
+  --shadow-md: rgba(15, 23, 42, 0.12);
+  --shadow-lg: rgba(15, 23, 42, 0.18);
+  --overlay-bg: rgba(26, 32, 44, 0.75); /* Oscuro semitransparente */
+
+  /* Elementos Adicionales */
+  --tag-bg:#edf2f7; /* Fondo de etiqueta muy claro */
+  --hover-bg:#f0f4f8; /* Fondo de hover sutil */
+
+  /* Colores de Estado */
+  --success:#10b981; /* Verde */
+  --danger:#ef4444; /* Rojo */
+
+  /* Demo indicator colors */
+  --demo-bg: #4a5568;
+  --demo-text: #ffffff;
+  --demo-border: #06b6d4;
+}
   
   [data-theme="dark"]{
-    --bg-primary: #0f172a;
-    --bg-secondary:#1e293b;
-    --bg-card:#334155;
-    --text-primary:#f1f5f9;
-    --text-secondary:#cbd5e1;
-    --text-muted:#94a3b8;
-    --accent-primary: #f97316;
-    --accent-hover: #ea580c;
-    --accent-color:#f97316;
-    --border-color:#475569;
-    --border-light:#475569;
-    --shadow: rgba(0,0,0,0.4);
-    --shadow-md: rgba(0,0,0,0.5);
-    --shadow-lg: rgba(0,0,0,0.6);
-    --overlay-bg: rgba(0,0,0,0.85);
-    --tag-bg:#475569;
-    --hover-bg:#475569;
-    /* Demo indicator colors for dark */
-    --demo-bg: #1e293b;
-    --demo-text: #ffffff;
-    --demo-border: #0ea5e9;
-  }
+  /* Fondos */
+  --bg-primary: #1a202c; /* Azul/Gris oscuro principal */
+  --bg-secondary:#2d3748; /* Tono un poco más claro para secciones */
+  --bg-card:#4a5568; /* Tono intermedio para tarjetas */
+
+  /* Textos */
+  --text-primary:#f7fafc; /* Blanco casi puro para el texto principal */
+  --text-secondary:#e2e8f0; /* Gris muy claro para texto secundario */
+  --text-muted:#a0aec0; /* Gris medio para texto silenciado */
+
+  /* Acento (Azul/Cian) - Se mantiene el mismo para consistencia */
+  --accent-primary: #06b6d4;
+  --accent-hover: #0891b2;
+  --accent-color:#06b6d4;
+
+  /* Bordes y Sombras */
+  --border-color:#4a5568; /* Borde de contraste bajo */
+  --border-light:#2d3748; /* Borde de muy bajo contraste */
+  --shadow: rgba(0, 0, 0, 0.45);
+  --shadow-md: rgba(0, 0, 0, 0.65);
+  --shadow-lg: rgba(0, 0, 0, 0.85);
+  --overlay-bg: rgba(0, 0, 0, 0.9); /* Muy oscuro semitransparente */
+
+  /* Elementos Adicionales */
+  --tag-bg:#4a5568; /* Fondo de etiqueta */
+  --hover-bg:#4a5568; /* Fondo de hover */
+  
+  /* Colores de Estado - Se mantienen */
+  --success:#10b981;
+  --danger:#ef4444;
+
+  /* Demo indicator colors for dark */
+  --demo-bg: #2d3748;
+  --demo-text: #ffffff;
+  --demo-border: #06b6d4;
+}
 
   /* === Base === */
   *{box-sizing:border-box;margin:0;padding:0}
